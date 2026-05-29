@@ -7,6 +7,8 @@ pub enum TokenKind {
     Slash,
     Star,
 
+    Assign,
+
     Id(String),
     Bool(bool),
     NumFloat(f64),
@@ -24,7 +26,7 @@ pub struct Token {
 }
 
 impl Token {
-    fn new(kind: TKind, line: usize, offset: usize, len: usize) -> Self {
+    pub fn new(kind: TKind, line: usize, offset: usize, len: usize) -> Self {
         Self {
             kind,
             line,
@@ -49,6 +51,7 @@ impl fmt::Display for Token {
                 TKind::Minus => format!("'-'"),
                 TKind::Slash => format!("'/'"),
                 TKind::Star => format!("'*'"),
+                TKind::Assign => format!("'='"),
                 TKind::Eof => format!("'\\0'"),
             },
             self.line,

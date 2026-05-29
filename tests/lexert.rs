@@ -1,8 +1,8 @@
 use qnt::lexer::Lexer;
 
 #[test]
-fn main() {
-    let text = "123";
+fn all_tokens() {
+    let text = "+ - * / = ident 123";
     let tokens = Lexer::new(text).tokenize();
 
     match tokens {

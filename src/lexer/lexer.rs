@@ -46,23 +46,95 @@ impl<'a> Lexer<'a> {
         }
     }
 
+    fn advance(&mut self, offset: i8) -> Result<(), CompileError> {
+        self.pos += offset as usize;
+        if self.peek(0)? == '\n' {
+            self.line += 1;
+            self.offset = 0;
+        } else {
+            self.offset += 1;
+        }
+        Ok(())
+    }
+
     fn current_line(&self) -> String {
         self.lines[self.line].to_string()
     }
 
+    fn push(&mut self, kind: TKind, line: usize, offset: usize, len: usize) {
+        self.tokens.push(Token::new(kind, line, offset, len));
+    }
+
+    fn tokenize_ident(&mut self) -> Result<(), CompileError> {
+        let mut buffer = String::new();
+        let mut current = self.peek(0)?;
+        let start_line = self.line;
+        let start_offset = self.offset;
+        while current.is_alphabetic() {
+            buffer.push(current);
+            self.advance(1)?;
+            current = self.peek(0)?;
+        }
+        let len = buffer.len();
+        let kind = match buffer.as_str() {
+            "true" | "false" => TKind::Bool(match buffer.parse::<bool>() {
+                Ok(ok) => ok,
+                Err(err) => {
+                    return compilation_error!(
+                        CEKind::FailedParse,
+                        start_line,
+                        start_offset,
+                        1,
+                        self.current_line(),
+                        "Failed parse boolean value: {err}"
+                    );
+                }
+            }),
+            _ => TKind::Id(buffer),
+        };
+        self.push(kind, start_line, start_offset, len);
+        Ok(())
+    }
+
     pub fn tokenize(&mut self) -> Result<Vec<Token>, CompileError> {
         while self.pos < self.len {
-            return match self.peek(0)? {
-                _ => compilation_error!(
-                    CEKind::UnknownChar,
-                    self.line,
-                    self.offset,
-                    1,
-                    self.current_line(),
-                    "Unknown character"
-                ),
-            };
+            let current = self.peek(0)?;
+            match current {
+                c if c.is_whitespace() => self.advance(1)?,
+                '+' => {
+                    self.push(TKind::Plus, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '-' => {
+                    self.push(TKind::Minus, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '*' => {
+                    self.push(TKind::Star, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '/' => {
+                    self.push(TKind::Slash, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '=' => {
+                    self.push(TKind::Assign, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                c if c.is_alphabetic() => self.tokenize_ident()?,
+                _ => {
+                    return compilation_error!(
+                        CEKind::UnknownChar,
+                        self.line,
+                        self.offset,
+                        1,
+                        self.current_line(),
+                        "Unknown character '{current}'"
+                    );
+                }
+            }
         }
+        self.push(TKind::Eof, self.line, self.offset, 0);
         todo!();
     }
 }

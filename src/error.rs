@@ -1,7 +1,11 @@
+use std::error::Error;
+use std::fmt;
+
 #[derive(Debug)]
 pub enum CompileErrorKind {
     InvalidChar,
     UnknownChar,
+    FailedParse,
 }
 
 #[derive(Debug)]
@@ -26,10 +30,10 @@ impl CompileError {
         Self {
             kind,
             line,
-            message,
             offset,
-            source_line,
             len,
+            message,
+            source_line,
         }
     }
 
@@ -52,6 +56,14 @@ impl CompileError {
         )
     }
 }
+
+impl fmt::Display for CompileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[{:?}] {}", self.kind, self.message)
+    }
+}
+
+impl Error for CompileError {}
 
 #[macro_export]
 macro_rules! compilation_error {
