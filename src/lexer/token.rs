@@ -1,6 +1,7 @@
 use std::fmt;
 pub type TKind = TokenKind;
 
+#[derive(Clone)]
 pub enum TokenKind {
     Plus,
     Minus,
@@ -11,12 +12,13 @@ pub enum TokenKind {
 
     Id(String),
     Bool(bool),
-    NumFloat(f64),
-    NumInt(i64),
+    NumFloat(f32),
+    NumInt(i32),
 
     Eof,
 }
 
+#[derive(Clone)]
 pub struct Token {
     kind: TKind,
 

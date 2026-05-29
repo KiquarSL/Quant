@@ -4,6 +4,7 @@ use std::fmt;
 #[derive(Debug)]
 pub enum CompileErrorKind {
     InvalidChar,
+    InvalidNumber,
     UnknownChar,
     FailedParse,
 }
@@ -40,7 +41,10 @@ impl CompileError {
     pub fn report(&self, file_name: &str) -> String {
         let mut err = String::new();
         err.push_str(&format!("Error: {}\n", self.message));
-        err.push_str(&format!("{file_name} in {}:{}\n", self.line, self.offset));
+        err.push_str(&format!(
+            "-> {file_name} in {}:{}\n",
+            self.line, self.offset
+        ));
         err.push_str(&self.point());
         err
     }

@@ -47,13 +47,13 @@ impl<'a> Lexer<'a> {
     }
 
     fn advance(&mut self, offset: i8) -> Result<(), CompileError> {
-        self.pos += offset as usize;
         if self.peek(0)? == '\n' {
             self.line += 1;
             self.offset = 0;
         } else {
             self.offset += 1;
         }
+        self.pos += offset as usize;
         Ok(())
     }
 
@@ -67,18 +67,51 @@ impl<'a> Lexer<'a> {
 
     fn tokenize_ident(&mut self) -> Result<(), CompileError> {
         let mut buffer = String::new();
-        let mut current = self.peek(0)?;
+        let mut current;
         let start_line = self.line;
         let start_offset = self.offset;
-        while current.is_alphabetic() {
-            buffer.push(current);
-            self.advance(1)?;
+        while self.pos < self.len {
             current = self.peek(0)?;
+            if !current.is_alphabetic() {
+                break;
+            }
+            self.advance(1)?;
+            buffer.push(current);
         }
         let len = buffer.len();
         let kind = match buffer.as_str() {
-            "true" | "false" => TKind::Bool(match buffer.parse::<bool>() {
-                Ok(ok) => ok,
+            "true" => TKind::Bool(true),
+            "false" => TKind::Bool(false),
+            _ => TKind::Id(buffer),
+        };
+        self.push(kind, start_line, start_offset, len);
+        Ok(())
+    }
+
+    fn tokenize_number(&mut self) -> Result<(), CompileError> {
+        let mut buffer = String::new();
+        let mut current;
+        let start_line = self.line;
+        let start_offset = self.offset;
+        let mut has_dot = false;
+
+        while self.pos < self.len {
+            current = self.peek(0)?;
+            if current.is_digit(10) || (current == '.' && !has_dot) {
+                buffer.push(current);
+                if current == '.' {
+                    has_dot = true;
+                }
+                self.advance(1)?;
+            } else {
+                break;
+            }
+        }
+
+        let len = buffer.len();
+        let kind = if has_dot {
+            match buffer.parse::<f32>() {
+                Ok(n) => TKind::NumFloat(n),
                 Err(err) => {
                     return compilation_error!(
                         CEKind::FailedParse,
@@ -86,11 +119,24 @@ impl<'a> Lexer<'a> {
                         start_offset,
                         1,
                         self.current_line(),
-                        "Failed parse boolean value: {err}"
+                        "Failed parse float value: {err}"
                     );
                 }
-            }),
-            _ => TKind::Id(buffer),
+            }
+        } else {
+            match buffer.parse::<i32>() {
+                Ok(n) => TKind::NumInt(n),
+                Err(err) => {
+                    return compilation_error!(
+                        CEKind::FailedParse,
+                        start_line,
+                        start_offset,
+                        1,
+                        self.current_line(),
+                        "Failed parse integer value: {err}"
+                    );
+                }
+            }
         };
         self.push(kind, start_line, start_offset, len);
         Ok(())
@@ -122,6 +168,7 @@ impl<'a> Lexer<'a> {
                     self.advance(1)?;
                 }
                 c if c.is_alphabetic() => self.tokenize_ident()?,
+                c if c.is_digit(10) => self.tokenize_number()?,
                 _ => {
                     return compilation_error!(
                         CEKind::UnknownChar,
@@ -129,12 +176,13 @@ impl<'a> Lexer<'a> {
                         self.offset,
                         1,
                         self.current_line(),
-                        "Unknown character '{current}'"
+                        "Unknown character '{}'",
+                        current
                     );
                 }
             }
         }
         self.push(TKind::Eof, self.line, self.offset, 0);
-        todo!();
+        Ok(self.tokens.clone())
     }
 }
