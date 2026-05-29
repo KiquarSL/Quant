@@ -8,6 +8,11 @@ pub enum TokenKind {
     Slash,
     Star,
 
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+
     Assign,
 
     Id(String),
@@ -40,21 +45,25 @@ impl Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // NumInt (n) in l:o
+        // 'n' in l:o
         write!(
             f,
             "{} in {}:{}",
             match &self.kind {
                 TKind::NumInt(int) => format!("'{int}'"),
                 TKind::NumFloat(float) => format!("'{float}'"),
-                TKind::Id(id) => format!("Identificator '{}'", id),
+                TKind::Id(id) => format!("Ident '{}'", id),
                 TKind::Bool(truth) => format!("'{truth}'"),
-                TKind::Plus => format!("'+'"),
-                TKind::Minus => format!("'-'"),
-                TKind::Slash => format!("'/'"),
-                TKind::Star => format!("'*'"),
-                TKind::Assign => format!("'='"),
-                TKind::Eof => format!("'\\0'"),
+                TKind::Plus => "'+'".to_string(),
+                TKind::Minus => "'-'".to_string(),
+                TKind::Slash => "'/'".to_string(),
+                TKind::Star => "'*'".to_string(),
+                TKind::Assign => "'='".to_string(),
+                TKind::LParen => "'('".to_string(),
+                TKind::RParen => "')'".to_string(),
+                TKind::LBrace => "'{'".to_string(),
+                TKind::RBrace => "'}'".to_string(),
+                TKind::Eof => "'\\0'".to_string(),
             },
             self.line,
             self.offset

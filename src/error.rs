@@ -40,7 +40,7 @@ impl CompileError {
 
     pub fn report(&self, file_name: &str) -> String {
         let mut err = String::new();
-        err.push_str(&format!("Error: {}\n", self.message));
+        err.push_str(&format!("\x1b[31mError: {}\x1b[0m\n", self.message));
         err.push_str(&format!(
             "-> {file_name} in {}:{}\n",
             self.line, self.offset
@@ -51,7 +51,7 @@ impl CompileError {
 
     fn point(&self) -> String {
         format!(
-            "{} | {}\n{} | {}{}\n",
+            "{} | {}\n{} | {}\x1b[33m{}\x1b[0m\n",
             self.line,
             self.source_line,
             " ".repeat(self.line.to_string().len()),

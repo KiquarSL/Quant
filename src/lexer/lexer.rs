@@ -147,6 +147,14 @@ impl<'a> Lexer<'a> {
             let current = self.peek(0)?;
             match current {
                 c if c.is_whitespace() => self.advance(1)?,
+                '(' => {
+                    self.push(TKind::LParen, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                ')' => {
+                    self.push(TKind::RParen, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
                 '+' => {
                     self.push(TKind::Plus, self.line, self.offset, 1);
                     self.advance(1)?;
