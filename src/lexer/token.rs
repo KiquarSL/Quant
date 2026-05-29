@@ -10,6 +10,10 @@ pub enum TokenKind {
     Pow,
 
     Bang,
+    Colon,
+    Comma,
+
+    Write,
 
     LParen,
     RParen,
@@ -17,7 +21,15 @@ pub enum TokenKind {
     RBrace,
 
     Assign,
-    Arrow,
+    RArrow,
+    LArrow,
+
+    Gt,
+    Ge,
+    Lt,
+    Le,
+    Eq,
+    Ne,
 
     Id(String),
     Str(String),
@@ -67,12 +79,22 @@ impl fmt::Display for Token {
                 TKind::Pow => "'^'".to_string(),
                 TKind::Bang => "'!'".to_string(),
                 TKind::Assign => "'='".to_string(),
-                TKind::Arrow => "'=>'".to_string(),
+                TKind::RArrow => "'=>'".to_string(),
+                TKind::LArrow => "'<-'".to_string(),
                 TKind::LParen => "'('".to_string(),
+                TKind::Write => "'!?'".to_string(),
                 TKind::RParen => "')'".to_string(),
+                TKind::Colon => "':'".to_string(),
+                TKind::Comma => "','".to_string(),
                 TKind::LBrace => "'{'".to_string(),
                 TKind::RBrace => "'}'".to_string(),
                 TKind::Eof => "'\\0'".to_string(),
+                TKind::Lt => "'<'".to_string(),
+                TKind::Le => "'<='".to_string(),
+                TKind::Gt => "'>'".to_string(),
+                TKind::Ge => "'>='".to_string(),
+                TKind::Eq => "'=='".to_string(),
+                TKind::Ne => "'!='".to_string(),
             },
             self.line,
             self.offset

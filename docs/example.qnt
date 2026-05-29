@@ -3,6 +3,8 @@ b: num = 4.5 # type num (float)
 l = "some"   # type str (string)
 d = true     # type logic
 
+?! "Hello, world", "!"
+
 # bind var types
 a, b: num = 3.13, -4
 
@@ -12,7 +14,7 @@ add(a: num, b: int) = a + b
 # Long function
 add_print(a: num, b: num) = {
     g = a + b
-    ! "result: ", g
+    !? "result: ", g
 }
 
 # bind args
@@ -21,7 +23,7 @@ sub(a, b: num) => a - b
 # function with return
 sub_print(a, b: num) num = {
     g = a - b
-    ! "result: ", g
+    !? "result: ", g
     => g
 }
 

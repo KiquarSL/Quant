@@ -204,16 +204,48 @@ impl<'a> Lexer<'a> {
                     self.advance(1)?;
                 }
                 '!' => {
-                    self.push(TKind::Bang, self.line, self.offset, 1);
-                    self.advance(1)?;
+                    if self.peek(1)? == '?' {
+                        self.push(TKind::Write, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else if self.peek(1)? == '=' {
+                        self.push(TKind::Ne, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else {
+                        self.push(TKind::Bang, self.line, self.offset, 1);
+                        self.advance(1)?;
+                    }
                 }
                 '=' => {
                     if self.peek(1)? == '>' {
+                        self.push(TKind::RArrow, self.line, self.offset, 2);
                         self.advance(2)?;
-                        self.push(TKind::Arrow, self.line, self.offset, 2);
+                    } else if self.peek(1)? == '=' {
+                        self.push(TKind::Eq, self.line, self.offset, 2);
+                        self.advance(2)?;
                     } else {
-                        self.advance(1)?;
                         self.push(TKind::Assign, self.line, self.offset, 1);
+                        self.advance(1)?;
+                    }
+                }
+                '<' => {
+                    if self.peek(1)? == '-' {
+                        self.push(TKind::LArrow, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else if self.peek(1)? == '=' {
+                        self.push(TKind::Le, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else {
+                        self.push(TKind::Lt, self.line, self.offset, 1);
+                        self.advance(1)?;
+                    }
+                }
+                '>' => {
+                    if self.peek(1)? == '=' {
+                        self.push(TKind::Ge, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else {
+                        self.push(TKind::Gt, self.line, self.offset, 1);
+                        self.advance(1)?;
                     }
                 }
                 c if c.is_alphabetic() => self.tokenize_ident()?,
