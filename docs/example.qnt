@@ -7,7 +7,7 @@ d = true     # type logic
 a, b: num = 3.13, -4
 
 # Short function
-add(a: num, b: int) => a + b
+add(a: num, b: int) = a + b
 
 # Long function
 add_print(a: num, b: num) = {

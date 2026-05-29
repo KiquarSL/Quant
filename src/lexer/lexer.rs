@@ -51,7 +51,7 @@ impl<'a> Lexer<'a> {
             self.line += 1;
             self.offset = 0;
         } else {
-            self.offset += 1;
+            self.offset += offset as usize;
         }
         self.pos += offset as usize;
         Ok(())
@@ -142,6 +142,26 @@ impl<'a> Lexer<'a> {
         Ok(())
     }
 
+    fn tokenize_string(&mut self) -> Result<(), CompileError> {
+        let mut buffer = String::new();
+        let mut current;
+        let start_line = self.line;
+        let start_offset = self.offset;
+        self.advance(1)?;
+        while self.pos < self.len {
+            current = self.peek(0)?;
+            if current == '"' {
+                self.advance(1)?;
+                break;
+            }
+            self.advance(1)?;
+            buffer.push(current);
+        }
+        let len = buffer.len();
+        self.push(TKind::Str(buffer), start_line, start_offset, len);
+        Ok(())
+    }
+
     pub fn tokenize(&mut self) -> Result<Vec<Token>, CompileError> {
         while self.pos < self.len {
             let current = self.peek(0)?;
@@ -153,6 +173,14 @@ impl<'a> Lexer<'a> {
                 }
                 ')' => {
                     self.push(TKind::RParen, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '{' => {
+                    self.push(TKind::LBrace, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '}' => {
+                    self.push(TKind::RBrace, self.line, self.offset, 1);
                     self.advance(1)?;
                 }
                 '+' => {
@@ -167,16 +195,30 @@ impl<'a> Lexer<'a> {
                     self.push(TKind::Star, self.line, self.offset, 1);
                     self.advance(1)?;
                 }
+                '^' => {
+                    self.push(TKind::Pow, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
                 '/' => {
                     self.push(TKind::Slash, self.line, self.offset, 1);
                     self.advance(1)?;
                 }
-                '=' => {
-                    self.push(TKind::Assign, self.line, self.offset, 1);
+                '!' => {
+                    self.push(TKind::Bang, self.line, self.offset, 1);
                     self.advance(1)?;
+                }
+                '=' => {
+                    if self.peek(1)? == '>' {
+                        self.advance(2)?;
+                        self.push(TKind::Arrow, self.line, self.offset, 2);
+                    } else {
+                        self.advance(1)?;
+                        self.push(TKind::Assign, self.line, self.offset, 1);
+                    }
                 }
                 c if c.is_alphabetic() => self.tokenize_ident()?,
                 c if c.is_digit(10) => self.tokenize_number()?,
+                c if c == '"' => self.tokenize_string()?,
                 _ => {
                     return compilation_error!(
                         CEKind::UnknownChar,

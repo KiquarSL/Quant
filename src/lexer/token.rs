@@ -7,6 +7,9 @@ pub enum TokenKind {
     Minus,
     Slash,
     Star,
+    Pow,
+
+    Bang,
 
     LParen,
     RParen,
@@ -14,8 +17,10 @@ pub enum TokenKind {
     RBrace,
 
     Assign,
+    Arrow,
 
     Id(String),
+    Str(String),
     Bool(bool),
     NumFloat(f32),
     NumInt(i32),
@@ -52,13 +57,17 @@ impl fmt::Display for Token {
             match &self.kind {
                 TKind::NumInt(int) => format!("'{int}'"),
                 TKind::NumFloat(float) => format!("'{float}'"),
-                TKind::Id(id) => format!("Ident '{}'", id),
+                TKind::Id(id) => format!("{id}"),
+                TKind::Str(s) => format!("\"{s}\""),
                 TKind::Bool(truth) => format!("'{truth}'"),
                 TKind::Plus => "'+'".to_string(),
                 TKind::Minus => "'-'".to_string(),
                 TKind::Slash => "'/'".to_string(),
                 TKind::Star => "'*'".to_string(),
+                TKind::Pow => "'^'".to_string(),
+                TKind::Bang => "'!'".to_string(),
                 TKind::Assign => "'='".to_string(),
+                TKind::Arrow => "'=>'".to_string(),
                 TKind::LParen => "'('".to_string(),
                 TKind::RParen => "')'".to_string(),
                 TKind::LBrace => "'{'".to_string(),

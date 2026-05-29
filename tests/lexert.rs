@@ -2,7 +2,8 @@ use qnt::lexer::Lexer;
 
 #[test]
 fn all_tokens() {
-    let text = "+ - * / = ident() 123 true false!";
+    let text = "+ - * / = => 5^2
+               \"some string\" ident() {} 123 true false!";
     let tokens = Lexer::new(text).tokenize();
 
     match tokens {
