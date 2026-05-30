@@ -47,7 +47,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn advance(&mut self, offset: i8) -> Result<(), CompileError> {
-        if self.peek(0)? == '\n' {
+        if self.pos < self.len && self.peek(0)? == '\n' {
             self.line += 1;
             self.offset = 0;
         } else {
@@ -203,11 +203,19 @@ impl<'a> Lexer<'a> {
                     self.push(TKind::Slash, self.line, self.offset, 1);
                     self.advance(1)?;
                 }
+                ':' => {
+                    self.push(TKind::Colon, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                ',' => {
+                    self.push(TKind::Comma, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
                 '!' => {
-                    if self.peek(1)? == '?' {
+                    if self.pos + 1 < self.len && self.peek(1)? == '?' {
                         self.push(TKind::Write, self.line, self.offset, 2);
                         self.advance(2)?;
-                    } else if self.peek(1)? == '=' {
+                    } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
                         self.push(TKind::Ne, self.line, self.offset, 2);
                         self.advance(2)?;
                     } else {
@@ -216,10 +224,10 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 '=' => {
-                    if self.peek(1)? == '>' {
+                    if self.pos + 1 < self.len && self.peek(1)? == '>' {
                         self.push(TKind::RArrow, self.line, self.offset, 2);
                         self.advance(2)?;
-                    } else if self.peek(1)? == '=' {
+                    } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
                         self.push(TKind::Eq, self.line, self.offset, 2);
                         self.advance(2)?;
                     } else {
@@ -228,10 +236,10 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 '<' => {
-                    if self.peek(1)? == '-' {
+                    if self.pos + 1 < self.len && self.peek(1)? == '-' {
                         self.push(TKind::LArrow, self.line, self.offset, 2);
                         self.advance(2)?;
-                    } else if self.peek(1)? == '=' {
+                    } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
                         self.push(TKind::Le, self.line, self.offset, 2);
                         self.advance(2)?;
                     } else {
@@ -240,7 +248,7 @@ impl<'a> Lexer<'a> {
                     }
                 }
                 '>' => {
-                    if self.peek(1)? == '=' {
+                    if self.pos + 1 < self.len && self.peek(1)? == '=' {
                         self.push(TKind::Ge, self.line, self.offset, 2);
                         self.advance(2)?;
                     } else {

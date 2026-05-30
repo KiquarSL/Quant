@@ -1,3 +1,4 @@
+use colored::*;
 use std::error::Error;
 use std::fmt;
 
@@ -40,24 +41,20 @@ impl CompileError {
 
     pub fn report(&self, file_name: &str) -> String {
         let mut err = String::new();
-        err.push_str(&format!("\x1b[31mError: {}\x1b[0m\n", self.message));
-        err.push_str(&format!(
-            "-> {file_name} in {}:{}\n",
-            self.line, self.offset
-        ));
-        err.push_str(&self.point());
+        let header = format!("Error: {}", self.message).red();
+        let file = format!("-> {file_name} in {}:{}", self.line, self.offset).blue();
+        let point = self.point();
+        err.push_str(&format!("{header}\n{file}\n{point}\n"));
         err
     }
 
     fn point(&self) -> String {
-        format!(
-            "{} | {}\n{} | {}\x1b[33m{}\x1b[0m\n",
-            self.line,
-            self.source_line,
-            " ".repeat(self.line.to_string().len()),
-            " ".repeat(self.offset),
-            "^".repeat(self.len)
-        )
+        let line = format!("{} | {}", self.line, self.source_line);
+        let line_num = " ".repeat(self.line.to_string().len());
+        let padds = " ".repeat(self.offset);
+        let points = "^".repeat(self.len).yellow();
+        let err_line = format!("{} | {}{}", line_num, padds, points);
+        format!("{line}\n{err_line}")
     }
 }
 
