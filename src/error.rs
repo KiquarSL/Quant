@@ -8,6 +8,8 @@ pub enum CompileErrorKind {
     InvalidNumber,
     UnknownChar,
     FailedParse,
+
+    UnexpectedToken,
 }
 
 #[derive(Debug)]

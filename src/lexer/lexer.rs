@@ -268,6 +268,36 @@ impl<'a> Lexer<'a> {
                         self.advance(1)?;
                     }
                 }
+                '&' => {
+                    if self.pos + 1 < self.len && self.peek(1)? == '&' {
+                        self.push(TKind::And, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else {
+                        return compilation_error!(
+                            CEKind::InvalidChar,
+                            self.line,
+                            self.offset + 1,
+                            1,
+                            self.current_line(),
+                            "Add & for fix",
+                        );
+                    }
+                }
+                '|' => {
+                    if self.pos + 1 < self.len && self.peek(1)? == '|' {
+                        self.push(TKind::Or, self.line, self.offset, 2);
+                        self.advance(2)?;
+                    } else {
+                        return compilation_error!(
+                            CEKind::InvalidChar,
+                            self.line,
+                            self.offset + 1,
+                            1,
+                            self.current_line(),
+                            "Add | for fix",
+                        );
+                    }
+                }
                 '#' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '*' {
                         self.advance(2)?;
@@ -294,13 +324,13 @@ impl<'a> Lexer<'a> {
                         self.offset,
                         1,
                         self.current_line(),
-                        "Unknown character '{}'",
+                        "Unknown character {}",
                         current
                     );
                 }
             }
         }
-        self.push(TKind::Eof, self.line, self.offset, 0);
+        self.push(TKind::Eof, self.line, self.offset, 1);
         Ok(self.tokens.clone())
     }
 }

@@ -1,7 +1,7 @@
 use std::fmt;
 pub type TKind = TokenKind;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
     Plus,
     Minus,
@@ -34,6 +34,9 @@ pub enum TokenKind {
     Eq,
     Ne,
 
+    And,
+    Or,
+
     Id(String),
     Str(String),
     Bool(bool),
@@ -45,11 +48,11 @@ pub enum TokenKind {
 
 #[derive(Clone)]
 pub struct Token {
-    kind: TKind,
+    pub kind: TKind,
 
-    line: usize,
-    offset: usize,
-    len: usize,
+    pub line: usize,
+    pub offset: usize,
+    pub len: usize,
 }
 
 impl Token {
@@ -90,6 +93,8 @@ impl fmt::Display for Token {
                 TKind::Write => "'!?'".to_string(),
                 TKind::Dollar => "'$'".to_string(),
                 TKind::RParen => "')'".to_string(),
+                TKind::And => "'&&'".to_string(),
+                TKind::Or => "'||'".to_string(),
                 TKind::Colon => "':'".to_string(),
                 TKind::Comma => "','".to_string(),
                 TKind::LBrace => "'{'".to_string(),
