@@ -57,8 +57,10 @@ w = 4
     !? "w = 4"
 }
 
-# Matrix
-# Type [[int]]
+#*  
+    Matrix
+ Type [[int]]
+*#
 m = [ [1, 2, 3], 
       [4, 5, 6] ]
       
