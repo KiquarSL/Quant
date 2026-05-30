@@ -2,8 +2,11 @@ use qnt::lexer::Lexer;
 
 #[test]
 fn all_tokens() {
-    let text = "+ - * / = => 5^2 : , !? $ []
-\"some string\" ident() {} 123 true! false !";
+    let text = "+ - * / = => 5^2 : , !? $ [] # comment
+\"some string\" ident() #* 
+block comment
+*#
+{} 123 true! false !";
     let tokens = Lexer::new(text).tokenize();
 
     match tokens {

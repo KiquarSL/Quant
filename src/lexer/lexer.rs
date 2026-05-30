@@ -268,6 +268,22 @@ impl<'a> Lexer<'a> {
                         self.advance(1)?;
                     }
                 }
+                '#' => {
+                    if self.pos + 1 < self.len && self.peek(1)? == '*' {
+                        self.advance(2)?;
+                        while self.pos + 1 < self.len {
+                            if self.peek(0)? == '*' && self.peek(1)? == '#' {
+                                self.advance(2)?;
+                                break;
+                            }
+                            self.advance(1)?;
+                        }
+                    } else {
+                        while self.pos < self.len && self.peek(0)? != '\n' {
+                            self.advance(1)?;
+                        }
+                    }
+                }
                 c if c.is_alphabetic() => self.tokenize_ident()?,
                 c if c.is_digit(10) => self.tokenize_number()?,
                 c if c == '"' => self.tokenize_string()?,
