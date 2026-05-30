@@ -30,8 +30,6 @@ sub_print(a, b: num) num = {
 # math type expression
 a = 4
 b = 3
-c = 2
-D = b^2 - 4 a c
 
 j = 4 (a b)
 

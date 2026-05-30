@@ -34,6 +34,15 @@ impl<'a> Parser<'a> {
         Ok(exprs)
     }
 
+    fn check(&mut self, kind: TKind) -> bool {
+        if self.peek(0).kind == kind {
+            self.advance(1);
+            true
+        } else {
+            false
+        }
+    }
+
     fn peek(&self, offset: i8) -> Token {
         let idx = self.pos + offset as usize;
         self.tokens[idx].clone()
@@ -52,6 +61,7 @@ impl Parser<'_> {
     fn expr(&mut self) -> Result<Expr, CompileError> {
         self.logical()
     }
+
     fn logical(&mut self) -> Result<Expr, CompileError> {
         let mut left = self.comparison()?;
         loop {
@@ -66,6 +76,7 @@ impl Parser<'_> {
         }
         Ok(left)
     }
+
     fn comparison(&mut self) -> Result<Expr, CompileError> {
         let mut left = self.additive()?;
         loop {
@@ -84,6 +95,7 @@ impl Parser<'_> {
         }
         Ok(left)
     }
+
     fn additive(&mut self) -> Result<Expr, CompileError> {
         let mut left = self.multiplicative()?;
         loop {
@@ -98,21 +110,48 @@ impl Parser<'_> {
         }
         Ok(left)
     }
+
     fn multiplicative(&mut self) -> Result<Expr, CompileError> {
-        let mut left = self.unary()?;
+        let mut left = self.power()?;
         loop {
-            let op = match self.peek(0).kind {
+            let tkn = self.peek(0);
+            let op = match tkn.kind {
                 TKind::Star => ArithOp::Mul,
                 TKind::Slash => ArithOp::Div,
-                TKind::Pow => ArithOp::Pow,
+                TKind::LParen => {
+                    self.advance(1);
+                    left = Expr::Arith(Box::new(left), ArithOp::Mul, Box::new(self.expr()?));
+                    if !self.check(TKind::RParen) {
+                        return compilation_error!(
+                            CEKind::ExpectedToken,
+                            tkn.line,
+                            tkn.offset,
+                            tkn.len,
+                            self.get_line(tkn.line),
+                            "Not found closed ')'"
+                        );
+                    }
+                    continue;
+                }
                 _ => break,
             };
             self.advance(1);
-            let right = self.unary()?;
+            let right = self.power()?;
             left = Expr::Arith(Box::new(left), op, Box::new(right));
         }
         Ok(left)
     }
+
+    fn power(&mut self) -> Result<Expr, CompileError> {
+        let mut left = self.unary()?;
+        if self.peek(0).kind == TKind::Pow {
+            self.advance(1);
+            let right = self.power()?;
+            left = Expr::Arith(Box::new(left), ArithOp::Pow, Box::new(right));
+        }
+        Ok(left)
+    }
+
     fn unary(&mut self) -> Result<Expr, CompileError> {
         let tkn = self.peek(0);
         match tkn.kind {
@@ -121,6 +160,7 @@ impl Parser<'_> {
             _ => self.primary(),
         }
     }
+
     fn primary(&mut self) -> Result<Expr, CompileError> {
         let tkn = self.peek(0);
         match tkn.kind {
@@ -139,6 +179,25 @@ impl Parser<'_> {
             TKind::Id(id) => {
                 self.advance(1);
                 Ok(Expr::Id(id))
+            }
+            TKind::Str(s) => {
+                self.advance(1);
+                Ok(Expr::Str(s))
+            }
+            TKind::LParen => {
+                self.advance(1);
+                let expr = self.expr()?;
+                if !self.check(TKind::RParen) {
+                    return compilation_error!(
+                        CEKind::ExpectedToken,
+                        tkn.line,
+                        tkn.offset,
+                        tkn.len,
+                        self.get_line(tkn.line),
+                        "Not found closed ')'"
+                    );
+                }
+                Ok(expr)
             }
             _ => {
                 return compilation_error!(

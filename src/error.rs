@@ -10,6 +10,7 @@ pub enum CompileErrorKind {
     FailedParse,
 
     UnexpectedToken,
+    ExpectedToken,
 }
 
 #[derive(Debug)]

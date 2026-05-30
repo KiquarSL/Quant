@@ -68,10 +68,10 @@ impl Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 'n' in l:o
+        // 'token'
         write!(
             f,
-            "{} in {}:{}",
+            "{}",
             match &self.kind {
                 TKind::NumInt(int) => format!("'{int}'"),
                 TKind::NumFloat(float) => format!("'{float}'"),
@@ -106,9 +106,7 @@ impl fmt::Display for Token {
                 TKind::Ge => "'>='".to_string(),
                 TKind::Eq => "'=='".to_string(),
                 TKind::Ne => "'!='".to_string(),
-            },
-            self.line,
-            self.offset
+            }
         )
     }
 }
