@@ -10,6 +10,7 @@ pub enum TokenKind {
     Pow,
 
     Bang,
+    Dollar,
     Colon,
     Comma,
 
@@ -19,6 +20,8 @@ pub enum TokenKind {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
 
     Assign,
     RArrow,
@@ -82,7 +85,10 @@ impl fmt::Display for Token {
                 TKind::RArrow => "'=>'".to_string(),
                 TKind::LArrow => "'<-'".to_string(),
                 TKind::LParen => "'('".to_string(),
+                TKind::LBracket => "'['".to_string(),
+                TKind::RBracket => "']'".to_string(),
                 TKind::Write => "'!?'".to_string(),
+                TKind::Dollar => "'$'".to_string(),
                 TKind::RParen => "')'".to_string(),
                 TKind::Colon => "':'".to_string(),
                 TKind::Comma => "','".to_string(),

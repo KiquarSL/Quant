@@ -211,6 +211,18 @@ impl<'a> Lexer<'a> {
                     self.push(TKind::Comma, self.line, self.offset, 1);
                     self.advance(1)?;
                 }
+                '$' => {
+                    self.push(TKind::Dollar, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                '[' => {
+                    self.push(TKind::LBracket, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
+                ']' => {
+                    self.push(TKind::RBracket, self.line, self.offset, 1);
+                    self.advance(1)?;
+                }
                 '!' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '?' {
                         self.push(TKind::Write, self.line, self.offset, 2);
