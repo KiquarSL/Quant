@@ -155,8 +155,14 @@ impl Parser<'_> {
     fn unary(&mut self) -> Result<Expr, CompileError> {
         let tkn = self.peek(0);
         match tkn.kind {
-            TKind::Bang => Ok(Expr::Unary(UnaryOp::Not, Box::new(self.primary()?))),
-            TKind::Minus => Ok(Expr::Unary(UnaryOp::Neg, Box::new(self.primary()?))),
+            TKind::Bang => {
+                self.advance(1);
+                Ok(Expr::Unary(UnaryOp::Not, Box::new(self.primary()?)))
+            }
+            TKind::Minus => {
+                self.advance(1);
+                Ok(Expr::Unary(UnaryOp::Neg, Box::new(self.primary()?)))
+            }
             _ => self.primary(),
         }
     }

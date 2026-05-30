@@ -3,15 +3,12 @@ use qnt::parser::Parser;
 
 #[test]
 fn expression() {
-    let text = "a + 4 * 3   
-	
-	6 +4 *(7+7) + 5^2* (5) 
-	
-	4<6 && 7+4>3 && true    \"str\" + \"str2\"
-	
-	4 (4+4)
-	
-	2^2^3";
+    let text = "a + 4 *-3
+	4 < 6 && 7 + 4 > 3 && !true
+	\"str\" + \"str2\"
+	2 ^ 3 ^ 4
+	2 + (4 + 4) * (8 + 8)
+";
     println!("Source: {}", &text);
     let tokens = Lexer::new(text).tokenize();
     match tokens {

@@ -1,7 +1,7 @@
 type BExpr = Box<Expr>;
 use strum_macros::Display;
 
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, PartialEq, Clone, Display)]
 pub enum Expr {
     #[strum(to_string = "{0}")]
     NumInt(i32),
@@ -24,7 +24,7 @@ pub enum Expr {
     Unary(UnaryOp, BExpr),
 }
 
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, PartialEq, Clone, Display)]
 pub enum ArithOp {
     #[strum(to_string = "+")]
     Add,
@@ -38,7 +38,7 @@ pub enum ArithOp {
     Pow,
 }
 
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, PartialEq, Clone, Display)]
 pub enum CompOp {
     #[strum(to_string = ">")]
     Gt,
@@ -53,14 +53,14 @@ pub enum CompOp {
     #[strum(to_string = "!=")]
     Ne,
 }
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, PartialEq, Clone, Display)]
 pub enum LogicOp {
     #[strum(to_string = "&&")]
     And,
     #[strum(to_string = "||")]
     Or,
 }
-#[derive(Debug, Clone, Display)]
+#[derive(Debug, PartialEq, Clone, Display)]
 pub enum UnaryOp {
     #[strum(to_string = "-")]
     Neg,
