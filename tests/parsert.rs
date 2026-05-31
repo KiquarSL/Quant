@@ -1,11 +1,14 @@
 use colored::*;
-use serial_test::serial;
 
 use qnt::lexer::Lexer;
 use qnt::parser::Parser;
 
 #[test]
-#[serial]
+fn main() {
+	expression();
+	statement();
+}
+
 fn expression() {
     println!("{}", String::from("Expression").blue());
     let text = "a + 4 *-3
@@ -35,8 +38,6 @@ fn expression() {
     }
 }
 
-#[test]
-#[serial]
 fn statement() {
     println!("{}", String::from("Statement").blue());
     let text = "a: num = 5

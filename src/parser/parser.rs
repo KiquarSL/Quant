@@ -317,7 +317,7 @@ impl Parser<'_> {
         let end = self.peek(0);
         Ok(Stmt::Write(
             args,
-            info!(start.line, start.offset, end.pos-1 - start.pos),
+            info!(start.line, start.offset, end.pos-1 - start.pos)
         ))
     }
 
@@ -347,7 +347,7 @@ impl Parser<'_> {
             }
         };
         let value = self.expr()?;
-                          let end = self.peek(0);
+      let end = self.peek(0);
         Ok(Stmt::Assign(
             id,
             assign,
