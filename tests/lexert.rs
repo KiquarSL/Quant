@@ -6,7 +6,8 @@ fn all_tokens() {
 \"some string\" ident() #* 
 block comment
 *#
-{} 123 true! false !";
+{} 123 true! false !
+[]";
     let tokens = Lexer::new(text).tokenize();
 
     match tokens {

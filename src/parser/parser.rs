@@ -1,13 +1,11 @@
-use super::{ArithOp, CompOp, Expr, Info, LogicOp, UnaryOp};
-use crate::error::{CompileError, CompileErrorKind};
+use super::{ArithOp, AssignOp, CompOp, Expr, LogicOp, Stmt, Type, UnaryOp};
+use crate::error::{CEKind, CompileError};
 use crate::lexer::{TKind, Token};
 use crate::{compilation_error, info};
 
-type CEKind = CompileErrorKind;
-
 pub struct Parser<'a> {
-    tokens: Vec<Token>,
     pos: usize,
+    tokens: Vec<Token>,
     lines: Vec<&'a str>,
 }
 
@@ -33,6 +31,18 @@ impl<'a> Parser<'a> {
         Ok(exprs)
     }
 
+    pub fn parse_stmt(&mut self) -> Result<Vec<Stmt>, CompileError> {
+        let mut stmts = vec![];
+        while self.peek(0).kind != TKind::Eof {
+            let stmt = self.stmt();
+            match stmt {
+                Ok(ok) => stmts.push(ok),
+                Err(err) => return Err(err),
+            }
+        }
+        Ok(stmts)
+    }
+
     fn check(&mut self, kind: TKind) -> bool {
         if self.peek(0).kind == kind {
             self.advance(1);
@@ -42,12 +52,12 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn peek(&self, offset: i8) -> Token {
+    pub fn peek(&self, offset: i8) -> Token {
         let idx = self.pos + offset as usize;
         self.tokens[idx].clone()
     }
 
-    fn get_line(&self, line: usize) -> String {
+    pub fn get_line(&self, line: usize) -> String {
         self.lines[line].to_string()
     }
 
@@ -258,5 +268,11 @@ impl Parser<'_> {
                 );
             }
         }
+    }
+}
+
+impl Parser<'_> {
+    fn stmt(&self) -> Result<Stmt, CompileError> {
+        todo!()
     }
 }

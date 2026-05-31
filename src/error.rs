@@ -2,6 +2,8 @@ use colored::*;
 use std::error::Error;
 use std::fmt;
 
+pub type CEKind = CompileErrorKind;
+
 #[derive(Debug)]
 pub enum CompileErrorKind {
     InvalidChar,
@@ -11,6 +13,7 @@ pub enum CompileErrorKind {
 
     UnexpectedToken,
     ExpectedToken,
+    UnknownStatement,
 }
 
 #[derive(Debug)]

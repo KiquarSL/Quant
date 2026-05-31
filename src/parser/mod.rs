@@ -1,7 +1,12 @@
 mod expr;
 mod parser;
-pub use expr::{ArithOp, CompOp, Expr, LogicOp, UnaryOp};
+mod stmt;
+mod r#type;
+
+pub use expr::{ArithOp, BExpr, CompOp, Expr, LogicOp, UnaryOp};
 pub use parser::Parser;
+pub use stmt::{AssignOp, Stmt};
+pub use r#type::Type;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Info {

@@ -1,7 +1,7 @@
 use super::Info;
 use std::fmt;
 
-type BExpr = Box<Expr>;
+pub type BExpr = Box<Expr>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
