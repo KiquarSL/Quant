@@ -1,14 +1,13 @@
-use super::{ArithOp, CompOp, Expr, LogicOp, UnaryOp};
-use crate::compilation_error;
+use super::{ArithOp, CompOp, Expr, Info, LogicOp, UnaryOp};
 use crate::error::{CompileError, CompileErrorKind};
 use crate::lexer::{TKind, Token};
+use crate::{compilation_error, info};
 
 type CEKind = CompileErrorKind;
 
 pub struct Parser<'a> {
     tokens: Vec<Token>,
     pos: usize,
-
     lines: Vec<&'a str>,
 }
 
@@ -63,64 +62,89 @@ impl Parser<'_> {
     }
 
     fn logical(&mut self) -> Result<Expr, CompileError> {
+        let start = self.peek(0);
         let mut left = self.comparison()?;
         loop {
-            let op = match self.peek(0).kind {
-                TKind::And => LogicOp::And,
-                TKind::Or => LogicOp::Or,
+            let op_tkn = self.peek(0);
+            let op = match op_tkn.kind {
+                TKind::And => LogicOp::And(info!(op_tkn)),
+                TKind::Or => LogicOp::Or(info!(op_tkn)),
                 _ => break,
             };
             self.advance(1);
             let right = self.comparison()?;
-            left = Expr::Logic(Box::new(left), op, Box::new(right));
+            left = Expr::Logic(Box::new(left), op, Box::new(right), info!(start));
         }
         Ok(left)
     }
 
     fn comparison(&mut self) -> Result<Expr, CompileError> {
+        let start = self.peek(0);
         let mut left = self.additive()?;
         loop {
-            let op = match self.peek(0).kind {
-                TKind::Gt => CompOp::Gt,
-                TKind::Ge => CompOp::Ge,
-                TKind::Lt => CompOp::Lt,
-                TKind::Le => CompOp::Le,
-                TKind::Eq => CompOp::Eq,
-                TKind::Ne => CompOp::Ne,
+            let op_tkn = self.peek(0);
+            let op = match op_tkn.kind {
+                TKind::Gt => CompOp::Gt(info!(op_tkn)),
+                TKind::Ge => CompOp::Ge(info!(op_tkn)),
+                TKind::Lt => CompOp::Lt(info!(op_tkn)),
+                TKind::Le => CompOp::Le(info!(op_tkn)),
+                TKind::Eq => CompOp::Eq(info!(op_tkn)),
+                TKind::Ne => CompOp::Ne(info!(op_tkn)),
                 _ => break,
             };
             self.advance(1);
             let right = self.additive()?;
-            left = Expr::Comp(Box::new(left), op, Box::new(right));
+            left = Expr::Comp(Box::new(left), op, Box::new(right), info!(start));
         }
         Ok(left)
     }
 
     fn additive(&mut self) -> Result<Expr, CompileError> {
+        let start = self.peek(0);
         let mut left = self.multiplicative()?;
         loop {
-            let op = match self.peek(0).kind {
-                TKind::Plus => ArithOp::Add,
-                TKind::Minus => ArithOp::Sub,
+            let op_tkn = self.peek(0);
+            let op = match op_tkn.kind {
+                TKind::Plus => ArithOp::Add(info!(op_tkn)),
+                TKind::Minus => ArithOp::Sub(info!(op_tkn)),
                 _ => break,
             };
             self.advance(1);
             let right = self.multiplicative()?;
-            left = Expr::Arith(Box::new(left), op, Box::new(right));
+            left = Expr::Arith(Box::new(left), op, Box::new(right), info!(start));
         }
         Ok(left)
     }
 
     fn multiplicative(&mut self) -> Result<Expr, CompileError> {
+        let start = self.peek(0);
         let mut left = self.power()?;
         loop {
             let tkn = self.peek(0);
-            let op = match tkn.kind {
-                TKind::Star => ArithOp::Mul,
-                TKind::Slash => ArithOp::Div,
+            match tkn.kind {
+                TKind::Star => {
+                    self.advance(1);
+                    let right = self.power()?;
+                    left = Expr::Arith(
+                        Box::new(left),
+                        ArithOp::Mul(info!(tkn)),
+                        Box::new(right),
+                        info!(start),
+                    );
+                }
+                TKind::Slash => {
+                    self.advance(1);
+                    let right = self.power()?;
+                    left = Expr::Arith(
+                        Box::new(left),
+                        ArithOp::Div(info!(tkn)),
+                        Box::new(right),
+                        info!(start),
+                    );
+                }
                 TKind::LParen => {
                     self.advance(1);
-                    left = Expr::Arith(Box::new(left), ArithOp::Mul, Box::new(self.expr()?));
+                    let right = self.expr()?;
                     if !self.check(TKind::RParen) {
                         return compilation_error!(
                             CEKind::ExpectedToken,
@@ -131,23 +155,32 @@ impl Parser<'_> {
                             "Not found closed ')'"
                         );
                     }
-                    continue;
+                    left = Expr::Arith(
+                        Box::new(left),
+                        ArithOp::Mul(info!(tkn)),
+                        Box::new(right),
+                        info!(start),
+                    );
                 }
                 _ => break,
-            };
-            self.advance(1);
-            let right = self.power()?;
-            left = Expr::Arith(Box::new(left), op, Box::new(right));
+            }
         }
         Ok(left)
     }
 
     fn power(&mut self) -> Result<Expr, CompileError> {
+        let start = self.peek(0);
         let mut left = self.unary()?;
-        if self.peek(0).kind == TKind::Pow {
+        let pow_tkn = self.peek(0);
+        if pow_tkn.kind == TKind::Pow {
             self.advance(1);
             let right = self.power()?;
-            left = Expr::Arith(Box::new(left), ArithOp::Pow, Box::new(right));
+            left = Expr::Arith(
+                Box::new(left),
+                ArithOp::Pow(info!(pow_tkn)),
+                Box::new(right),
+                info!(start),
+            );
         }
         Ok(left)
     }
@@ -157,11 +190,19 @@ impl Parser<'_> {
         match tkn.kind {
             TKind::Bang => {
                 self.advance(1);
-                Ok(Expr::Unary(UnaryOp::Not, Box::new(self.primary()?)))
+                Ok(Expr::Unary(
+                    UnaryOp::Not(info!(tkn)),
+                    Box::new(self.primary()?),
+                    info!(tkn),
+                ))
             }
             TKind::Minus => {
                 self.advance(1);
-                Ok(Expr::Unary(UnaryOp::Neg, Box::new(self.primary()?)))
+                Ok(Expr::Unary(
+                    UnaryOp::Neg(info!(tkn)),
+                    Box::new(self.primary()?),
+                    info!(tkn),
+                ))
             }
             _ => self.primary(),
         }
@@ -172,23 +213,23 @@ impl Parser<'_> {
         match tkn.kind {
             TKind::NumInt(n) => {
                 self.advance(1);
-                Ok(Expr::NumInt(n))
+                Ok(Expr::NumInt(n, info!(tkn)))
             }
             TKind::NumFloat(n) => {
                 self.advance(1);
-                Ok(Expr::NumFloat(n))
+                Ok(Expr::NumFloat(n, info!(tkn)))
             }
             TKind::Bool(truth) => {
                 self.advance(1);
-                Ok(Expr::Bool(truth))
+                Ok(Expr::Bool(truth, info!(tkn)))
             }
             TKind::Id(id) => {
                 self.advance(1);
-                Ok(Expr::Id(id))
+                Ok(Expr::Id(id, info!(tkn)))
             }
             TKind::Str(s) => {
                 self.advance(1);
-                Ok(Expr::Str(s))
+                Ok(Expr::Str(s, info!(tkn)))
             }
             TKind::LParen => {
                 self.advance(1);

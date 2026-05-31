@@ -1,69 +1,107 @@
+use super::Info;
+use std::fmt;
+
 type BExpr = Box<Expr>;
-use strum_macros::Display;
 
-#[derive(Debug, PartialEq, Clone, Display)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
-    #[strum(to_string = "{0}")]
-    NumInt(i32),
-    #[strum(to_string = "{0}")]
-    NumFloat(f32),
-    #[strum(to_string = "\"{0}\"")]
-    Str(String),
-    #[strum(to_string = "{0}")]
-    Id(String),
-    #[strum(to_string = "{0}")]
-    Bool(bool),
-
-    #[strum(to_string = "({0} {1} {2})")]
-    Arith(BExpr, ArithOp, BExpr),
-    #[strum(to_string = "({0} {1} {2})")]
-    Comp(BExpr, CompOp, BExpr),
-    #[strum(to_string = "({0} {1} {2})")]
-    Logic(BExpr, LogicOp, BExpr),
-    #[strum(to_string = "{0}{1}")]
-    Unary(UnaryOp, BExpr),
+    NumInt(i32, Info),
+    NumFloat(f32, Info),
+    Str(String, Info),
+    Id(String, Info),
+    Bool(bool, Info),
+    Arith(BExpr, ArithOp, BExpr, Info),
+    Comp(BExpr, CompOp, BExpr, Info),
+    Logic(BExpr, LogicOp, BExpr, Info),
+    Unary(UnaryOp, BExpr, Info),
 }
 
-#[derive(Debug, PartialEq, Clone, Display)]
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Expr::NumInt(n, _) => write!(f, "{}", n),
+            Expr::NumFloat(n, _) => write!(f, "{}", n),
+            Expr::Str(s, _) => write!(f, "\"{}\"", s),
+            Expr::Id(id, _) => write!(f, "{}", id),
+            Expr::Bool(b, _) => write!(f, "{}", b),
+            Expr::Arith(l, op, r, _) => write!(f, "({} {} {})", l, op, r),
+            Expr::Comp(l, op, r, _) => write!(f, "({} {} {})", l, op, r),
+            Expr::Logic(l, op, r, _) => write!(f, "({} {} {})", l, op, r),
+            Expr::Unary(op, expr, _) => write!(f, "{}{}", op, expr),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum ArithOp {
-    #[strum(to_string = "+")]
-    Add,
-    #[strum(to_string = "-")]
-    Sub,
-    #[strum(to_string = "*")]
-    Mul,
-    #[strum(to_string = "/")]
-    Div,
-    #[strum(to_string = "^")]
-    Pow,
+    Add(Info),
+    Sub(Info),
+    Mul(Info),
+    Div(Info),
+    Pow(Info),
 }
 
-#[derive(Debug, PartialEq, Clone, Display)]
+impl fmt::Display for ArithOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ArithOp::Add(_) => write!(f, "+"),
+            ArithOp::Sub(_) => write!(f, "-"),
+            ArithOp::Mul(_) => write!(f, "*"),
+            ArithOp::Div(_) => write!(f, "/"),
+            ArithOp::Pow(_) => write!(f, "^"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum CompOp {
-    #[strum(to_string = ">")]
-    Gt,
-    #[strum(to_string = ">=")]
-    Ge,
-    #[strum(to_string = "<")]
-    Lt,
-    #[strum(to_string = "<=")]
-    Le,
-    #[strum(to_string = "==")]
-    Eq,
-    #[strum(to_string = "!=")]
-    Ne,
+    Gt(Info),
+    Ge(Info),
+    Lt(Info),
+    Le(Info),
+    Eq(Info),
+    Ne(Info),
 }
-#[derive(Debug, PartialEq, Clone, Display)]
+
+impl fmt::Display for CompOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CompOp::Gt(_) => write!(f, ">"),
+            CompOp::Ge(_) => write!(f, ">="),
+            CompOp::Lt(_) => write!(f, "<"),
+            CompOp::Le(_) => write!(f, "<="),
+            CompOp::Eq(_) => write!(f, "=="),
+            CompOp::Ne(_) => write!(f, "!="),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum LogicOp {
-    #[strum(to_string = "&&")]
-    And,
-    #[strum(to_string = "||")]
-    Or,
+    And(Info),
+    Or(Info),
 }
-#[derive(Debug, PartialEq, Clone, Display)]
+
+impl fmt::Display for LogicOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LogicOp::And(_) => write!(f, "&&"),
+            LogicOp::Or(_) => write!(f, "||"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub enum UnaryOp {
-    #[strum(to_string = "-")]
-    Neg,
-    #[strum(to_string = "!")]
-    Not,
+    Neg(Info),
+    Not(Info),
+}
+
+impl fmt::Display for UnaryOp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            UnaryOp::Neg(_) => write!(f, "-"),
+            UnaryOp::Not(_) => write!(f, "!"),
+        }
+    }
 }
