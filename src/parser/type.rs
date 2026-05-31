@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug)]
 pub enum Type {
     Unknown,
@@ -16,5 +18,21 @@ impl Type {
             "str" => Type::Str,
             _ => Type::Unknown,
         }
+    }
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Type::Int => "int",
+                Type::Num => "num",
+                Type::Str => "str",
+                Type::Bool => "bool",
+                Type::Unknown => "unknown",
+            }
+        )
     }
 }

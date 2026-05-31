@@ -53,15 +53,17 @@ pub struct Token {
     pub line: usize,
     pub offset: usize,
     pub len: usize,
+    pub pos: usize,
 }
 
 impl Token {
-    pub fn new(kind: TKind, line: usize, offset: usize, len: usize) -> Self {
+    pub fn new(kind: TKind, line: usize, offset: usize, len: usize, pos: usize) -> Self {
         Self {
             kind,
             line,
             offset,
             len,
+            pos,
         }
     }
 }

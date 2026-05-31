@@ -59,7 +59,7 @@ impl CompileError {
     fn point(&self) -> String {
         let line = format!("{} | {}", self.line, self.source_line);
         let line_num = " ".repeat(self.line.to_string().len());
-        let padds = " ".repeat(self.offset);
+        let padds = " ".repeat(self.offset - 1);
         let points = "^".repeat(self.len).yellow();
         let err_line = format!("{} | {}{}", line_num, padds, points);
         format!("{line}\n{err_line}")
@@ -79,21 +79,21 @@ macro_rules! compilation_error {
     ($kind:expr, $line:expr, $offset:expr, $len:expr, $source_line:expr, $($fmt:tt)*) => {
         Err($crate::error::CompileError::new(
             $kind,
-            $line,
-            $offset,
+            $line+1,
+            $offset+1,
             $len,
             format!($($fmt)*),
             $source_line.to_string(),
         ))
     };
 	($kind:expr, $token:expr, $source_line:expr, $($fmt:tt)*) => {
-        Err($crate::error::CompileError::new(
-            $kind,
-            $token.line,
+        crate::compilation_error!(
+			$kind,
+			$token.line,
             $token.offset,
             $token.len,
-            format!($($fmt)*),
-            $source_line.to_string(),
-        ))
+			$source_line.to_string(),
+			$($fmt)*
+		)
     };
 }

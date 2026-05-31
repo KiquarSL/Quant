@@ -5,6 +5,7 @@ mod r#type;
 
 pub use expr::{ArithOp, BExpr, CompOp, Expr, LogicOp, UnaryOp};
 pub use parser::Parser;
+use std::fmt;
 pub use stmt::{AssignOp, Stmt, StmtKind};
 pub use r#type::Type;
 
@@ -15,6 +16,16 @@ pub struct Info {
     pub len: usize,
 }
 
+impl fmt::Display for Info {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "line: {}, offset: {}, len: {}",
+            self.line, self.offset, self.len
+        )
+    }
+}
+
 #[macro_export]
 macro_rules! info {
     ($tkn:expr) => {
@@ -22,7 +33,7 @@ macro_rules! info {
     };
     ($line:expr, $offset:expr, $len:expr) => {
         $crate::parser::Info {
-            line: $line,
+            line: $line+1,
             offset: $offset,
             len: $len,
         }

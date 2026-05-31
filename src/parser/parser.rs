@@ -1,4 +1,4 @@
-use super::{ArithOp, AssignOp, CompOp, Expr, LogicOp, Stmt, StmtKind, Type, UnaryOp};
+use super::{ArithOp, AssignOp, BExpr, CompOp, Expr, LogicOp, Stmt, StmtKind, Type, UnaryOp};
 use crate::error::{CEKind, CompileError};
 use crate::lexer::{TKind, Token};
 use crate::{compilation_error, info};
@@ -79,6 +79,18 @@ impl<'a> Parser<'a> {
                 "Invalid type"
             ),
         }
+    }
+
+    fn parse_args(&mut self) -> Result<Vec<BExpr>, CompileError> {
+        let mut args = vec![];
+        while self.peek(0).kind != TKind::Eof {
+            let arg = self.expr()?;
+            args.push(Box::new(arg));
+            if !self.check(TKind::Comma) {
+                break;
+            }
+        }
+        Ok(args)
     }
 }
 
@@ -286,7 +298,27 @@ impl Parser<'_> {
         match Stmt::define(self)? {
             StmtKind::Assign => Ok(self.stmt_assign()?),
             StmtKind::Declare => Ok(self.stmt_declare()?),
+            StmtKind::Write => Ok(self.stmt_write()?),
         }
+    }
+
+    fn stmt_write(&mut self) -> Result<Stmt, CompileError> {
+        let start = self.peek(0);
+        if !self.check(TKind::Write) {
+            return compilation_error!(
+                CEKind::ExpectedToken,
+                start,
+                self.get_line(start.line),
+                "Expected '!?', found {}",
+                start
+            );
+        }
+        let args = self.parse_args()?;
+        let end = self.peek(0);
+        Ok(Stmt::Write(
+            args,
+            info!(start.line, start.offset, end.pos-1 - start.pos),
+        ))
     }
 
     fn stmt_assign(&mut self) -> Result<Stmt, CompileError> {
@@ -315,11 +347,12 @@ impl Parser<'_> {
             }
         };
         let value = self.expr()?;
+                          let end = self.peek(0);
         Ok(Stmt::Assign(
             id,
             assign,
             Box::new(value.clone()),
-            info!(start.line, start.offset, value.info().len - start.len),
+            info!(start.line, start.offset, end.pos-1 - start.pos),
         ))
     }
 
@@ -370,11 +403,12 @@ impl Parser<'_> {
             }
         };
         let value = self.expr()?;
+		let end = self.peek(0);
         Ok(Stmt::Declare(
             id,
             ty,
             Box::new(value.clone()),
-            info!(start.line, start.offset, value.info().len - start.len),
+            info!(start.line, start.offset, end.pos-1 - start.pos),
         ))
     }
 }

@@ -8,11 +8,13 @@ use std::fmt;
 pub enum Stmt {
     Declare(String, Type, BExpr, Info),
     Assign(String, AssignOp, BExpr, Info),
+    Write(Vec<BExpr>, Info),
 }
 
 pub enum StmtKind {
     Declare,
     Assign,
+    Write,
 }
 
 impl Stmt {
@@ -22,6 +24,7 @@ impl Stmt {
         match (start.kind, next.kind) {
             (TKind::Id(_), TKind::Colon) => Ok(StmtKind::Declare),
             (TKind::Id(_), TKind::Assign) => Ok(StmtKind::Assign),
+            (TKind::Write, _) => Ok(StmtKind::Write),
             _ => {
                 return compilation_error!(
                     CEKind::UnknownStatement,
@@ -33,6 +36,27 @@ impl Stmt {
                 );
             }
         }
+    }
+}
+
+impl fmt::Display for Stmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Stmt::Declare(id, ty, val, info) => format!("{id}: {ty} = {val} ({info})"),
+                Stmt::Assign(id, assign, val, info) => format!("{id} {assign} {val} ({info})"),
+                Stmt::Write(args, info) => {
+                    let args = args
+                        .iter()
+                        .map(|i| i.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    format!("!? {args} ({info})")
+                }
+            }
+        )
     }
 }
 

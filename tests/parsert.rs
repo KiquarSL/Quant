@@ -21,6 +21,7 @@ fn expression() {
             let exprs = Parser::new(tokens, text).parse_expr();
             match exprs {
                 Ok(expr) => {
+                    println!("Result:");
                     for exp in expr {
                         println!("{}", exp);
                     }
@@ -39,7 +40,9 @@ fn expression() {
 fn statement() {
     println!("{}", String::from("Statement").blue());
     let text = "a: num = 5
-b: 123 = true+";
+b: bool = true
+c: str = \"World\"
+!? \"Hello, \", c";
     println!("Source: \n{}", &text);
     let tokens = Lexer::new(text).tokenize();
     match tokens {
@@ -47,8 +50,9 @@ b: 123 = true+";
             let stmts = Parser::new(tokens, text).parse_stmt();
             match stmts {
                 Ok(stmt) => {
+                    println!("Result:");
                     for stm in stmt {
-                        println!("{:?}", stm);
+                        println!("{}", stm);
                     }
                 }
                 Err(err) => eprintln!("{}", err.report("test.qnt")),

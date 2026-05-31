@@ -59,8 +59,8 @@ impl<'a> Lexer<'a> {
         self.lines[self.line].to_string()
     }
 
-    fn push(&mut self, kind: TKind, line: usize, offset: usize, len: usize) {
-        self.tokens.push(Token::new(kind, line, offset, len));
+    fn push(&mut self, kind: TKind, line: usize, offset: usize, len: usize, pos: usize) {
+        self.tokens.push(Token::new(kind, line, offset, len, pos));
     }
 
     fn tokenize_ident(&mut self) -> Result<(), CompileError> {
@@ -68,6 +68,7 @@ impl<'a> Lexer<'a> {
         let mut current;
         let start_line = self.line;
         let start_offset = self.offset;
+        let pos = self.pos;
         while self.pos < self.len {
             current = self.peek(0)?;
             if !current.is_alphabetic() {
@@ -82,7 +83,7 @@ impl<'a> Lexer<'a> {
             "false" => TKind::Bool(false),
             _ => TKind::Id(buffer),
         };
-        self.push(kind, start_line, start_offset, len);
+        self.push(kind, start_line, start_offset, len, pos);
         Ok(())
     }
 
@@ -92,6 +93,7 @@ impl<'a> Lexer<'a> {
         let start_line = self.line;
         let start_offset = self.offset;
         let mut has_dot = false;
+        let pos = self.pos;
 
         while self.pos < self.len {
             current = self.peek(0)?;
@@ -136,7 +138,7 @@ impl<'a> Lexer<'a> {
                 }
             }
         };
-        self.push(kind, start_line, start_offset, len);
+        self.push(kind, start_line, start_offset, len, pos);
         Ok(())
     }
 
@@ -145,6 +147,7 @@ impl<'a> Lexer<'a> {
         let mut current;
         let start_line = self.line;
         let start_offset = self.offset;
+        let pos = self.pos;
         self.advance(1)?;
         while self.pos < self.len {
             current = self.peek(0)?;
@@ -155,120 +158,121 @@ impl<'a> Lexer<'a> {
             self.advance(1)?;
             buffer.push(current);
         }
-        let len = buffer.len();
-        self.push(TKind::Str(buffer), start_line, start_offset, len);
+        let len = buffer.len() + 2;
+        self.push(TKind::Str(buffer), start_line, start_offset, len, pos);
         Ok(())
     }
 
     pub fn tokenize(&mut self) -> Result<Vec<Token>, CompileError> {
         while self.pos < self.len {
             let current = self.peek(0)?;
+            let pos = self.pos;
             match current {
                 c if c.is_whitespace() => self.advance(1)?,
                 '(' => {
-                    self.push(TKind::LParen, self.line, self.offset, 1);
+                    self.push(TKind::LParen, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 ')' => {
-                    self.push(TKind::RParen, self.line, self.offset, 1);
+                    self.push(TKind::RParen, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '{' => {
-                    self.push(TKind::LBrace, self.line, self.offset, 1);
+                    self.push(TKind::LBrace, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '}' => {
-                    self.push(TKind::RBrace, self.line, self.offset, 1);
+                    self.push(TKind::RBrace, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '+' => {
-                    self.push(TKind::Plus, self.line, self.offset, 1);
+                    self.push(TKind::Plus, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '-' => {
-                    self.push(TKind::Minus, self.line, self.offset, 1);
+                    self.push(TKind::Minus, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '*' => {
-                    self.push(TKind::Star, self.line, self.offset, 1);
+                    self.push(TKind::Star, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '^' => {
-                    self.push(TKind::Pow, self.line, self.offset, 1);
+                    self.push(TKind::Pow, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '/' => {
-                    self.push(TKind::Slash, self.line, self.offset, 1);
+                    self.push(TKind::Slash, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 ':' => {
-                    self.push(TKind::Colon, self.line, self.offset, 1);
+                    self.push(TKind::Colon, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 ',' => {
-                    self.push(TKind::Comma, self.line, self.offset, 1);
+                    self.push(TKind::Comma, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '$' => {
-                    self.push(TKind::Dollar, self.line, self.offset, 1);
+                    self.push(TKind::Dollar, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '[' => {
-                    self.push(TKind::LBracket, self.line, self.offset, 1);
+                    self.push(TKind::LBracket, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 ']' => {
-                    self.push(TKind::RBracket, self.line, self.offset, 1);
+                    self.push(TKind::RBracket, self.line, self.offset, 1, pos);
                     self.advance(1)?;
                 }
                 '!' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '?' {
-                        self.push(TKind::Write, self.line, self.offset, 2);
+                        self.push(TKind::Write, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
-                        self.push(TKind::Ne, self.line, self.offset, 2);
+                        self.push(TKind::Ne, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
-                        self.push(TKind::Bang, self.line, self.offset, 1);
+                        self.push(TKind::Bang, self.line, self.offset, 1, pos);
                         self.advance(1)?;
                     }
                 }
                 '=' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '>' {
-                        self.push(TKind::RArrow, self.line, self.offset, 2);
+                        self.push(TKind::RArrow, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
-                        self.push(TKind::Eq, self.line, self.offset, 2);
+                        self.push(TKind::Eq, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
-                        self.push(TKind::Assign, self.line, self.offset, 1);
+                        self.push(TKind::Assign, self.line, self.offset, 1, pos);
                         self.advance(1)?;
                     }
                 }
                 '<' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '-' {
-                        self.push(TKind::LArrow, self.line, self.offset, 2);
+                        self.push(TKind::LArrow, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else if self.pos + 1 < self.len && self.peek(1)? == '=' {
-                        self.push(TKind::Le, self.line, self.offset, 2);
+                        self.push(TKind::Le, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
-                        self.push(TKind::Lt, self.line, self.offset, 1);
+                        self.push(TKind::Lt, self.line, self.offset, 1, pos);
                         self.advance(1)?;
                     }
                 }
                 '>' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '=' {
-                        self.push(TKind::Ge, self.line, self.offset, 2);
+                        self.push(TKind::Ge, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
-                        self.push(TKind::Gt, self.line, self.offset, 1);
+                        self.push(TKind::Gt, self.line, self.offset, 1, pos);
                         self.advance(1)?;
                     }
                 }
                 '&' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '&' {
-                        self.push(TKind::And, self.line, self.offset, 2);
+                        self.push(TKind::And, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
                         return compilation_error!(
@@ -283,7 +287,7 @@ impl<'a> Lexer<'a> {
                 }
                 '|' => {
                     if self.pos + 1 < self.len && self.peek(1)? == '|' {
-                        self.push(TKind::Or, self.line, self.offset, 2);
+                        self.push(TKind::Or, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
                         return compilation_error!(
@@ -328,7 +332,7 @@ impl<'a> Lexer<'a> {
                 }
             }
         }
-        self.push(TKind::Eof, self.line, self.offset, 1);
+        self.push(TKind::Eof, self.line, self.offset, 1, self.pos);
         Ok(self.tokens.clone())
     }
 }
