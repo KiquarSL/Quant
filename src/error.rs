@@ -14,6 +14,8 @@ pub enum CompileErrorKind {
     UnexpectedToken,
     ExpectedToken,
     UnknownStatement,
+    UnknownAssignOp,
+    InvalidType,
 }
 
 #[derive(Debug)]
@@ -80,6 +82,16 @@ macro_rules! compilation_error {
             $line,
             $offset,
             $len,
+            format!($($fmt)*),
+            $source_line.to_string(),
+        ))
+    };
+	($kind:expr, $token:expr, $source_line:expr, $($fmt:tt)*) => {
+        Err($crate::error::CompileError::new(
+            $kind,
+            $token.line,
+            $token.offset,
+            $token.len,
             format!($($fmt)*),
             $source_line.to_string(),
         ))

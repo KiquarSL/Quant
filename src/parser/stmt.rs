@@ -20,8 +20,8 @@ impl Stmt {
         let start = pr.peek(0);
         let next = pr.peek(1);
         match (start.kind, next.kind) {
-            (TKind::Id(_), TKind::Assign) => Ok(StmtKind::Assign),
             (TKind::Id(_), TKind::Colon) => Ok(StmtKind::Declare),
+            (TKind::Id(_), TKind::Assign) => Ok(StmtKind::Assign),
             _ => {
                 return compilation_error!(
                     CEKind::UnknownStatement,

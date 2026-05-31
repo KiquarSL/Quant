@@ -1,4 +1,4 @@
-use super::{ArithOp, AssignOp, CompOp, Expr, LogicOp, Stmt, Type, UnaryOp};
+use super::{ArithOp, AssignOp, CompOp, Expr, LogicOp, Stmt, StmtKind, Type, UnaryOp};
 use crate::error::{CEKind, CompileError};
 use crate::lexer::{TKind, Token};
 use crate::{compilation_error, info};
@@ -63,6 +63,22 @@ impl<'a> Parser<'a> {
 
     fn advance(&mut self, offset: i8) {
         self.pos += offset as usize;
+    }
+
+    fn parse_type(&mut self) -> Result<Type, CompileError> {
+        let tkn = self.peek(0);
+        match tkn.kind {
+            TKind::Id(id) => {
+                self.advance(1);
+                Ok(Type::from_str(&id))
+            }
+            _ => compilation_error!(
+                CEKind::InvalidType,
+                tkn,
+                self.get_line(tkn.line),
+                "Invalid type"
+            ),
+        }
     }
 }
 
@@ -158,9 +174,7 @@ impl Parser<'_> {
                     if !self.check(TKind::RParen) {
                         return compilation_error!(
                             CEKind::ExpectedToken,
-                            tkn.line,
-                            tkn.offset,
-                            tkn.len,
+                            tkn,
                             self.get_line(tkn.line),
                             "Not found closed ')'"
                         );
@@ -247,9 +261,7 @@ impl Parser<'_> {
                 if !self.check(TKind::RParen) {
                     return compilation_error!(
                         CEKind::ExpectedToken,
-                        tkn.line,
-                        tkn.offset,
-                        tkn.len,
+                        tkn,
                         self.get_line(tkn.line),
                         "Not found closed ')'"
                     );
@@ -259,9 +271,7 @@ impl Parser<'_> {
             _ => {
                 return compilation_error!(
                     CEKind::UnexpectedToken,
-                    tkn.line,
-                    tkn.offset,
-                    tkn.len,
+                    tkn,
                     self.get_line(tkn.line),
                     "Unexpected token {}",
                     tkn
@@ -272,7 +282,99 @@ impl Parser<'_> {
 }
 
 impl Parser<'_> {
-    fn stmt(&self) -> Result<Stmt, CompileError> {
-        todo!()
+    fn stmt(&mut self) -> Result<Stmt, CompileError> {
+        match Stmt::define(self)? {
+            StmtKind::Assign => Ok(self.stmt_assign()?),
+            StmtKind::Declare => Ok(self.stmt_declare()?),
+        }
+    }
+
+    fn stmt_assign(&mut self) -> Result<Stmt, CompileError> {
+        let start = self.peek(0);
+        let id = match start.kind {
+            TKind::Id(id) => id,
+            _ => {
+                return compilation_error!(
+                    CEKind::ExpectedToken,
+                    start,
+                    self.get_line(start.line),
+                    "Expected ident, found {}",
+                    start
+                );
+            }
+        };
+        let assign = match self.peek(0).kind {
+            TKind::Assign => AssignOp::default(),
+            _ => {
+                return compilation_error!(
+                    CEKind::UnknownAssignOp,
+                    start,
+                    self.get_line(start.line),
+                    "Unknown assign operator"
+                );
+            }
+        };
+        let value = self.expr()?;
+        Ok(Stmt::Assign(
+            id,
+            assign,
+            Box::new(value.clone()),
+            info!(start.line, start.offset, value.info().len - start.len),
+        ))
+    }
+
+    fn stmt_declare(&mut self) -> Result<Stmt, CompileError> {
+        let start = self.peek(0);
+        let id = match start.kind {
+            TKind::Id(id) => {
+                self.advance(1);
+                id
+            }
+            _ => {
+                return compilation_error!(
+                    CEKind::ExpectedToken,
+                    start,
+                    self.get_line(start.line),
+                    "Expected ident, found {}",
+                    start
+                );
+            }
+        };
+        let colon = self.peek(0);
+        match colon.kind {
+            TKind::Colon => {
+                self.advance(1);
+            }
+            _ => {
+                return compilation_error!(
+                    CEKind::ExpectedToken,
+                    colon,
+                    self.get_line(start.line),
+                    "Expected ':', found {}",
+                    colon
+                );
+            }
+        };
+        let ty = self.parse_type()?;
+        let assign = self.peek(0);
+        match assign.kind {
+            TKind::Assign => self.advance(1),
+            _ => {
+                return compilation_error!(
+                    CEKind::ExpectedToken,
+                    assign,
+                    self.get_line(start.line),
+                    "Expected '=', found {}",
+                    assign
+                );
+            }
+        };
+        let value = self.expr()?;
+        Ok(Stmt::Declare(
+            id,
+            ty,
+            Box::new(value.clone()),
+            info!(start.line, start.offset, value.info().len - start.len),
+        ))
     }
 }

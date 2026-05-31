@@ -1,6 +1,6 @@
 use super::token::{TKind, Token};
 use crate::compilation_error;
-use crate::error::{CEKind, CompileError, CompileErrorKind};
+use crate::error::{CEKind, CompileError};
 
 pub struct Lexer<'a> {
     chars: Vec<char>,

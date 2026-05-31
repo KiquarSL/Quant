@@ -32,6 +32,22 @@ impl fmt::Display for Expr {
     }
 }
 
+impl Expr {
+    pub fn info(&self) -> Info {
+        match self {
+            Expr::NumInt(_, info) => info.clone(),
+            Expr::NumFloat(_, info) => info.clone(),
+            Expr::Str(_, info) => info.clone(),
+            Expr::Id(_, info) => info.clone(),
+            Expr::Bool(_, info) => info.clone(),
+            Expr::Arith(_, _, _, info) => info.clone(),
+            Expr::Comp(_, _, _, info) => info.clone(),
+            Expr::Logic(_, _, _, info) => info.clone(),
+            Expr::Unary(_, _, info) => info.clone(),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub enum ArithOp {
     Add(Info),

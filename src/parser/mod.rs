@@ -5,7 +5,7 @@ mod r#type;
 
 pub use expr::{ArithOp, BExpr, CompOp, Expr, LogicOp, UnaryOp};
 pub use parser::Parser;
-pub use stmt::{AssignOp, Stmt};
+pub use stmt::{AssignOp, Stmt, StmtKind};
 pub use r#type::Type;
 
 #[derive(Debug, Clone, PartialEq)]
