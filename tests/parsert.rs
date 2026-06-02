@@ -5,8 +5,8 @@ use qnt::parser::Parser;
 
 #[test]
 fn main() {
-	expression();
-	statement();
+    expression();
+    statement();
 }
 
 fn expression() {
@@ -43,6 +43,7 @@ fn statement() {
     let text = "a: num = 5
 b: bool = true
 c: str = \"World\"
+c = \"Kiquar\"
 !? \"Hello, \", c";
     println!("Source: \n{}", &text);
     let tokens = Lexer::new(text).tokenize();

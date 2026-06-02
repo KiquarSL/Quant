@@ -317,14 +317,17 @@ impl Parser<'_> {
         let end = self.peek(0);
         Ok(Stmt::Write(
             args,
-            info!(start.line, start.offset, end.pos-1 - start.pos)
+            info!(start.line, start.offset, end.pos - 1 - start.pos),
         ))
     }
 
     fn stmt_assign(&mut self) -> Result<Stmt, CompileError> {
         let start = self.peek(0);
         let id = match start.kind {
-            TKind::Id(id) => id,
+            TKind::Id(id) => {
+                self.advance(1);
+                id
+            }
             _ => {
                 return compilation_error!(
                     CEKind::ExpectedToken,
@@ -346,13 +349,14 @@ impl Parser<'_> {
                 );
             }
         };
+        self.advance(1);
         let value = self.expr()?;
-      let end = self.peek(0);
+        let end = self.peek(0);
         Ok(Stmt::Assign(
             id,
             assign,
             Box::new(value.clone()),
-            info!(start.line, start.offset, end.pos-1 - start.pos),
+            info!(start.line, start.offset, end.pos - 1 - start.pos),
         ))
     }
 
@@ -403,12 +407,12 @@ impl Parser<'_> {
             }
         };
         let value = self.expr()?;
-		let end = self.peek(0);
+        let end = self.peek(0);
         Ok(Stmt::Declare(
             id,
             ty,
             Box::new(value.clone()),
-            info!(start.line, start.offset, end.pos-1 - start.pos),
+            info!(start.line, start.offset, end.pos - 1 - start.pos),
         ))
     }
 }
