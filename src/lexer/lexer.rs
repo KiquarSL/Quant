@@ -290,14 +290,8 @@ impl<'a> Lexer<'a> {
                         self.push(TKind::Or, self.line, self.offset, 2, pos);
                         self.advance(2)?;
                     } else {
-                        return compilation_error!(
-                            CEKind::InvalidChar,
-                            self.line,
-                            self.offset + 1,
-                            1,
-                            self.current_line(),
-                            "Add | for fix",
-                        );
+                        self.push(TKind::Pipe, self.line, self.offset, 1, pos);
+                        self.advance(1)?;
                     }
                 }
                 '#' => {

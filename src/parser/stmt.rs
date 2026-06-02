@@ -1,4 +1,4 @@
-use super::{BExpr, Info, Parser, Type};
+use super::{BExpr, Expr, Info, Parser, Type};
 use crate::compilation_error;
 use crate::error::{CEKind, CompileError};
 use crate::lexer::TKind;
@@ -9,6 +9,7 @@ pub enum Stmt {
     Declare(String, Type, BExpr, Info),
     Assign(String, AssignOp, BExpr, Info),
     Write(Vec<BExpr>, Info),
+    Read(String, Option<BExpr>, Info),
     WhileLoop(BExpr, Vec<Stmt>, Info),
 }
 
@@ -16,18 +17,20 @@ pub enum StmtKind {
     Declare,
     Assign,
     Write,
+    Read,
     WhileLoop,
 }
 
 impl Stmt {
     pub fn define(pr: &Parser) -> Result<StmtKind, CompileError> {
         let start = pr.peek(0);
-        let next = pr.peek(1);
-        match (start.kind, next.kind) {
+        let next1 = pr.peek(1);
+        match (start.kind, next1.kind) {
             (TKind::Id(_), TKind::Colon) => Ok(StmtKind::Declare),
             (TKind::Id(_), TKind::Assign) => Ok(StmtKind::Assign),
             (TKind::LBracket, _) => Ok(StmtKind::WhileLoop),
             (TKind::Write, _) => Ok(StmtKind::Write),
+            (TKind::Id(_), TKind::LArrow) => Ok(StmtKind::Read),
             _ => {
                 return compilation_error!(
                     CEKind::UnknownStatement,
@@ -65,6 +68,12 @@ impl fmt::Display for Stmt {
                         .collect::<Vec<_>>()
                         .join("\n");
                     format!("[ {cond} ] {{\n{body}\n}} ({info})")
+                }
+                Stmt::Read(id, message, info) => {
+                    match message {
+                        Some(msg) => format!("{id} <- {msg} ({info})"),
+                        None => format!("{id} <- ({info})"),
+                    }
                 }
             }
         )

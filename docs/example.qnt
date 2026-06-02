@@ -5,9 +5,6 @@ d = true     # type logic
 
 !? "Hello, world", "!"
 
-# bind var types
-a, b: num = 3.13, -4
-
 # Short function
 add(a: num, b: int) = a + b
 
@@ -33,9 +30,10 @@ b = 3
 
 j = 4 (a b)
 
-# Loops
-# Note: [] = [ true ]
-
+#*
+       Loops
+ Note: [] = [ true ]
+*#
 [ a < 10 ] {
     a = a + 1
     !? "While loop!"
@@ -49,9 +47,9 @@ j = 4 (a b)
 w = 4
 $[ w < 4 ] {
     !? "w < 4"
-} -[ w > 4 ] {
+}|[ w > 4 ] {
     !? "w > 4"
-} -[] {
+}|[] {
     !? "w = 4"
 }
 

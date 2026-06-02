@@ -13,6 +13,7 @@ pub enum TokenKind {
     Dollar,
     Colon,
     Comma,
+    Pipe,
 
     Write,
 
@@ -101,6 +102,7 @@ impl fmt::Display for Token {
                 TKind::Comma => "','".to_string(),
                 TKind::LBrace => "'{'".to_string(),
                 TKind::RBrace => "'}'".to_string(),
+                TKind::Pipe => "'|'".to_string(),
                 TKind::Eof => "'\\0'".to_string(),
                 TKind::Lt => "'<'".to_string(),
                 TKind::Le => "'<='".to_string(),

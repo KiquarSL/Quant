@@ -48,7 +48,11 @@ c = \"Kiquar\"
 !? \"Hello, \", c
 
 [ a < 4 ] {
-	a = a + 1
+    a = a + 1
+}
+
+[] {
+    !? \"Forever\"
 }"
     .trim();
     println!("Source: \n{}", &text);

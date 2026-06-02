@@ -352,8 +352,14 @@ impl Parser<'_> {
     fn stmt_while_loop(&mut self) -> Result<Stmt, CompileError> {
         let start = self.peek(0);
         self.expected_token(TKind::LBracket, "[", &|_t| Ok(()))?;
-        let cond = self.expr()?;
-        self.expected_token(TKind::RBracket, "]", &|_t| Ok(()))?;
+        let cond = if self.check(TKind::RBracket) {
+            // [] = true
+            Expr::Bool(true, info!(start.line, start.offset, start.len + 1))
+        } else {
+            let cond = self.expr()?;
+            self.expected_token(TKind::RBracket, "]", &|_t| Ok(()))?;
+            cond
+        };
         self.expected_token(TKind::LBrace, "{", &|_t| Ok(()))?;
         let body = self.parse_body()?;
         self.expected_token(TKind::RBrace, "}", &|_t| Ok(()))?;
