@@ -45,7 +45,10 @@ impl<'a> Parser<'a> {
         }
         Ok(stmts)
     }
+}
 
+// ==== Help functions ==== //
+impl Parser<'_> {
     fn check(&mut self, kind: TKind) -> bool {
         if discriminant(&self.peek(0).kind) == discriminant(&kind) {
             self.advance(1);
@@ -115,6 +118,20 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn check_error(&mut self, expected: TKind, err: &str) -> Result<(), CompileError> {
+        let token = self.peek(0);
+        if !self.check(expected) {
+            return compilation_error!(
+                CEKind::ExpectedToken,
+                token,
+                self.get_line(token.line),
+                "{err}"
+            );
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn parse_body(&mut self) -> Result<Vec<Stmt>, CompileError> {
         let mut body = vec![];
         while self.peek(0).kind != TKind::Eof && self.peek(0).kind != TKind::RBrace {
@@ -128,6 +145,7 @@ impl<'a> Parser<'a> {
     }
 }
 
+// ==== Expressions parsing ==== //
 impl Parser<'_> {
     fn expr(&mut self) -> Result<Expr, CompileError> {
         self.logical()
@@ -304,14 +322,7 @@ impl Parser<'_> {
             TKind::LParen => {
                 self.advance(1);
                 let expr = self.expr()?;
-                if !self.check(TKind::RParen) {
-                    return compilation_error!(
-                        CEKind::ExpectedToken,
-                        tkn,
-                        self.get_line(tkn.line),
-                        "Not found closed ')'"
-                    );
-                }
+                self.check_error(TKind::RParen, "Not found closed ')'")?;
                 Ok(expr)
             }
             _ => {
@@ -327,6 +338,7 @@ impl Parser<'_> {
     }
 }
 
+// ==== Statements parsing ==== //
 impl Parser<'_> {
     fn stmt(&mut self) -> Result<Stmt, CompileError> {
         match Stmt::define(self)? {

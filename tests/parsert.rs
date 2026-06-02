@@ -46,6 +46,7 @@ b: bool = true
 c: str = \"World\"
 c = \"Kiquar\"
 !? \"Hello, \", c
+
 [ a < 4 ] {
 	a = a + 1
 }"
