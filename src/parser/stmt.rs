@@ -9,12 +9,14 @@ pub enum Stmt {
     Declare(String, Type, BExpr, Info),
     Assign(String, AssignOp, BExpr, Info),
     Write(Vec<BExpr>, Info),
+    WhileLoop(BExpr, Vec<Stmt>, Info),
 }
 
 pub enum StmtKind {
     Declare,
     Assign,
     Write,
+    WhileLoop,
 }
 
 impl Stmt {
@@ -24,6 +26,7 @@ impl Stmt {
         match (start.kind, next.kind) {
             (TKind::Id(_), TKind::Colon) => Ok(StmtKind::Declare),
             (TKind::Id(_), TKind::Assign) => Ok(StmtKind::Assign),
+            (TKind::LBracket, _) => Ok(StmtKind::WhileLoop),
             (TKind::Write, _) => Ok(StmtKind::Write),
             _ => {
                 return compilation_error!(
@@ -54,6 +57,14 @@ impl fmt::Display for Stmt {
                         .collect::<Vec<_>>()
                         .join(", ");
                     format!("!? {args} ({info})")
+                }
+                Stmt::WhileLoop(cond, body, info) => {
+                    let body = body
+                        .iter()
+                        .map(|i| "  ".to_owned() + &i.to_string())
+                        .collect::<Vec<_>>()
+                        .join("\n");
+                    format!("[ {cond} ] {{\n{body}\n}} ({info})")
                 }
             }
         )

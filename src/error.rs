@@ -87,7 +87,7 @@ macro_rules! compilation_error {
         ))
     };
 	($kind:expr, $token:expr, $source_line:expr, $($fmt:tt)*) => {
-        crate::compilation_error!(
+        $crate::compilation_error!(
 			$kind,
 			$token.line,
             $token.offset,

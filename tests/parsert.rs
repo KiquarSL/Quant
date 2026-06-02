@@ -40,11 +40,16 @@ fn expression() {
 
 fn statement() {
     println!("{}", String::from("Statement").blue());
-    let text = "a: num = 5
+    let text = "
+a: num = 0
 b: bool = true
 c: str = \"World\"
 c = \"Kiquar\"
-!? \"Hello, \", c";
+!? \"Hello, \", c
+[ a < 4 ] {
+	a = a + 1
+}"
+    .trim();
     println!("Source: \n{}", &text);
     let tokens = Lexer::new(text).tokenize();
     match tokens {

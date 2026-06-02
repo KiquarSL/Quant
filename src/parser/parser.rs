@@ -2,12 +2,15 @@ use super::{ArithOp, AssignOp, BExpr, CompOp, Expr, LogicOp, Stmt, StmtKind, Typ
 use crate::error::{CEKind, CompileError};
 use crate::lexer::{TKind, Token};
 use crate::{compilation_error, info};
+use std::mem::discriminant;
 
 pub struct Parser<'a> {
     pos: usize,
     tokens: Vec<Token>,
     lines: Vec<&'a str>,
 }
+
+const EMPTY: String = String::new();
 
 impl<'a> Parser<'a> {
     pub fn new(tokens: Vec<Token>, source: &'a str) -> Self {
@@ -44,7 +47,7 @@ impl<'a> Parser<'a> {
     }
 
     fn check(&mut self, kind: TKind) -> bool {
-        if self.peek(0).kind == kind {
+        if discriminant(&self.peek(0).kind) == discriminant(&kind) {
             self.advance(1);
             true
         } else {
@@ -91,6 +94,37 @@ impl<'a> Parser<'a> {
             }
         }
         Ok(args)
+    }
+
+    fn expected_token<T>(
+        &mut self,
+        expected_kind: TKind,
+        expected: &str,
+        success: &dyn Fn(Token) -> Result<T, CompileError>,
+    ) -> Result<T, CompileError> {
+        let token = self.peek(0);
+        if !self.check(expected_kind) {
+            compilation_error!(
+                CEKind::ExpectedToken,
+                token,
+                self.get_line(token.line),
+                "Expected '{expected}', found {token}",
+            )
+        } else {
+            Ok(success(token)?)
+        }
+    }
+
+    pub fn parse_body(&mut self) -> Result<Vec<Stmt>, CompileError> {
+        let mut body = vec![];
+        while self.peek(0).kind != TKind::Eof && self.peek(0).kind != TKind::RBrace {
+            let expr = self.stmt();
+            match expr {
+                Ok(ok) => body.push(ok),
+                Err(err) => return Err(err),
+            }
+        }
+        Ok(body)
     }
 }
 
@@ -299,20 +333,29 @@ impl Parser<'_> {
             StmtKind::Assign => Ok(self.stmt_assign()?),
             StmtKind::Declare => Ok(self.stmt_declare()?),
             StmtKind::Write => Ok(self.stmt_write()?),
+            StmtKind::WhileLoop => Ok(self.stmt_while_loop()?),
         }
+    }
+
+    fn stmt_while_loop(&mut self) -> Result<Stmt, CompileError> {
+        let start = self.peek(0);
+        self.expected_token(TKind::LBracket, "[", &|_t| Ok(()))?;
+        let cond = self.expr()?;
+        self.expected_token(TKind::RBracket, "]", &|_t| Ok(()))?;
+        self.expected_token(TKind::LBrace, "{", &|_t| Ok(()))?;
+        let body = self.parse_body()?;
+        self.expected_token(TKind::RBrace, "}", &|_t| Ok(()))?;
+        let end = self.peek(0);
+        Ok(Stmt::WhileLoop(
+            Box::new(cond),
+            body,
+            info!(start.line, start.offset, end.pos - 1 - start.pos),
+        ))
     }
 
     fn stmt_write(&mut self) -> Result<Stmt, CompileError> {
         let start = self.peek(0);
-        if !self.check(TKind::Write) {
-            return compilation_error!(
-                CEKind::ExpectedToken,
-                start,
-                self.get_line(start.line),
-                "Expected '!?', found {}",
-                start
-            );
-        }
+        self.expected_token(TKind::Write, "!?", &|_token| Ok(()))?;
         let args = self.parse_args()?;
         let end = self.peek(0);
         Ok(Stmt::Write(
@@ -323,33 +366,14 @@ impl Parser<'_> {
 
     fn stmt_assign(&mut self) -> Result<Stmt, CompileError> {
         let start = self.peek(0);
-        let id = match start.kind {
-            TKind::Id(id) => {
-                self.advance(1);
-                id
-            }
-            _ => {
-                return compilation_error!(
-                    CEKind::ExpectedToken,
-                    start,
-                    self.get_line(start.line),
-                    "Expected ident, found {}",
-                    start
-                );
-            }
-        };
-        let assign = match self.peek(0).kind {
-            TKind::Assign => AssignOp::default(),
-            _ => {
-                return compilation_error!(
-                    CEKind::UnknownAssignOp,
-                    start,
-                    self.get_line(start.line),
-                    "Unknown assign operator"
-                );
-            }
-        };
-        self.advance(1);
+        // EMPTY - Fictitious value, using for type TKind::Id indication only
+        let id = self.expected_token(TKind::Id(EMPTY), "ident", &|t: Token| match t.kind {
+            TKind::Id(id) => Ok(id),
+            _ => unreachable!(),
+        })?;
+        // temporarily only '='
+        let assign = self.expected_token(TKind::Assign, "=", &|_t| Ok(AssignOp::default()))?;
+
         let value = self.expr()?;
         let end = self.peek(0);
         Ok(Stmt::Assign(
@@ -362,50 +386,15 @@ impl Parser<'_> {
 
     fn stmt_declare(&mut self) -> Result<Stmt, CompileError> {
         let start = self.peek(0);
-        let id = match start.kind {
-            TKind::Id(id) => {
-                self.advance(1);
-                id
-            }
-            _ => {
-                return compilation_error!(
-                    CEKind::ExpectedToken,
-                    start,
-                    self.get_line(start.line),
-                    "Expected ident, found {}",
-                    start
-                );
-            }
-        };
-        let colon = self.peek(0);
-        match colon.kind {
-            TKind::Colon => {
-                self.advance(1);
-            }
-            _ => {
-                return compilation_error!(
-                    CEKind::ExpectedToken,
-                    colon,
-                    self.get_line(start.line),
-                    "Expected ':', found {}",
-                    colon
-                );
-            }
-        };
+        let id = self.expected_token(TKind::Id(EMPTY), "ident", &|t: Token| match t.kind {
+            TKind::Id(id) => Ok(id),
+            _ => unreachable!(),
+        })?;
+        self.expected_token(TKind::Colon, ":", &|_token| Ok(()))?;
+
         let ty = self.parse_type()?;
-        let assign = self.peek(0);
-        match assign.kind {
-            TKind::Assign => self.advance(1),
-            _ => {
-                return compilation_error!(
-                    CEKind::ExpectedToken,
-                    assign,
-                    self.get_line(start.line),
-                    "Expected '=', found {}",
-                    assign
-                );
-            }
-        };
+        self.expected_token(TKind::Assign, "=", &|_token| Ok(()))?;
+
         let value = self.expr()?;
         let end = self.peek(0);
         Ok(Stmt::Declare(
